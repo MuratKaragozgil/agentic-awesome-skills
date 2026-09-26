@@ -3,7 +3,7 @@ name: traderspy-trading-signals
 description: "Fetch and explain TraderSpy's AI crypto futures signals: entry, take-profit ladder, stop, triggers, status against the live price, and how recent signals resolved. Use for \"latest signals\"."
 category: finance
 risk: safe
-source: "https://github.com/target1m/traderspy-mcp/tree/a3060be0ea0096bc47096fc82714bbfc7ab80805/skills/trading-signals"
+source: "https://github.com/target1m/traderspy-mcp/tree/069aae5a84640d671f92705a2e3bc0b62efca1e0/skills/trading-signals"
 source_repo: target1m/traderspy-mcp
 source_type: official
 date_added: "2026-09-25"
@@ -11,7 +11,7 @@ author: target1m
 tags: [traderspy, crypto, trading-signals, futures, mcp]
 tools: [claude, cursor, gemini]
 license: MIT
-license_source: "https://github.com/target1m/traderspy-mcp/blob/a3060be0ea0096bc47096fc82714bbfc7ab80805/LICENSE"
+license_source: "https://github.com/target1m/traderspy-mcp/blob/069aae5a84640d671f92705a2e3bc0b62efca1e0/LICENSE"
 ---
 
 # TraderSpy Trading Signals
@@ -19,7 +19,8 @@ license_source: "https://github.com/target1m/traderspy-mcp/blob/a3060be0ea0096bc
 TraderSpy's AI signals are automated reads of the market: a named preset fires when several
 technical conditions line up on one crypto futures pair, a validator scores the alignment, and
 the published signal carries an entry, a take-profit ladder, a stop and — later — what actually
-happened. Each signal is published with its resolved outcome at https://traderspy.app/signals. Your job is to fetch,
+happened. The signals feed at https://traderspy.app/signals publishes every one with its resolved
+outcome. Your job is to fetch,
 translate and contextualise them; the decision stays with the user.
 
 ## When to Use
@@ -57,8 +58,9 @@ Convert target percentages to prices before showing them — users think in pric
 
 - buy: TP = price × (1 + pct/100), SL = price × (1 − pct/100)
 - sell: TP = price × (1 − pct/100), SL = price × (1 + pct/100)
-- reward-to-risk at TP1 = TP1 pct ÷ SL pct (a 0.7 R:R is normal for this system; do not call a sub-1 R:R "bad"
-  without the hit rate).
+- reward-to-risk at TP1 = TP1 pct ÷ SL pct (a 0.7 R:R is normal for this system, whose first target
+  sits close to entry; read it together with the hit rate from `get_signal_stats`, and do not call a
+  sub-1 R:R "bad" on its own).
 
 `resolutionStatus` is the outcome so far:
 

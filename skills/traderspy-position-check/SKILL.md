@@ -1,9 +1,9 @@
 ---
 name: traderspy-position-check
-description: "Health-check open crypto futures positions with TraderSpy: liquidation and stop distance, multi-timeframe read, funding and top-trader side. Reports only; never tells the user to close or add."
+description: "Health-check crypto futures positions the user describes, with TraderSpy data: liquidation and stop distance, multi-timeframe read, funding and top-trader side. Reports only; never tells the user to close or add."
 category: finance
 risk: safe
-source: "https://github.com/target1m/traderspy-mcp/tree/a3060be0ea0096bc47096fc82714bbfc7ab80805/skills/position-check"
+source: "https://github.com/target1m/traderspy-mcp/tree/069aae5a84640d671f92705a2e3bc0b62efca1e0/skills/position-check"
 source_repo: target1m/traderspy-mcp
 source_type: official
 date_added: "2026-09-25"
@@ -11,7 +11,7 @@ author: target1m
 tags: [traderspy, crypto, risk-management, futures, mcp]
 tools: [claude, cursor, gemini]
 license: MIT
-license_source: "https://github.com/target1m/traderspy-mcp/blob/a3060be0ea0096bc47096fc82714bbfc7ab80805/LICENSE"
+license_source: "https://github.com/target1m/traderspy-mcp/blob/069aae5a84640d671f92705a2e3bc0b62efca1e0/LICENSE"
 ---
 
 # TraderSpy Position Check
@@ -24,22 +24,18 @@ is.
 
 ## When to Use
 
-- Use when the user asks "how's my position", "check my account", "am I in trouble", "how far am I from liquidation", "should I hold or close" or "review my trades", or asks what you think of their long or short.
+- Use when the user asks "how's my position", "am I in trouble", "how far am I from liquidation", "should I hold or close" or "review my trades", or asks what you think of their long or short.
 - Use when the user pastes or describes a position, for example "I'm long ETH from 2,400 at 10x".
 - The skill reports and explains. It never tells the user to close, add, hedge or move a stop, and it cannot trade.
 
 ## Inputs
 
-**Account positions** → `get_my_account` (no arguments; needs the user's personal connection).
-Returns `hasWallet`, `balances { accountValueUsd, withdrawableUsd }`, `positions[]` with `coin`,
-`side` LONG / SHORT, `size`, `entryPrice`, `markPrice`, `leverage`, `marginMode` cross / isolated,
-`marginUsd`, `unrealizedPnl`, `liquidationPrice` (may be null), and `paper { enabled, balanceUsd,
-openPositions, positions[] }`. If `hasWallet` is false or `positions` is empty, say so and offer to
-check the paper positions or a position the user describes — do not invent one. If the call says
-the connection is not personal, tell the user a personal key from traderspy.app Settings is needed.
+The position always comes from the user. TraderSpy has no account tool: it cannot read a balance
+or an open position on any exchange, so never offer to "check the account".
 
-**Described positions** → ask for whatever is missing among side, entry, leverage (and stop /
-target if they have one). Size is optional — the analysis works in percentages.
+Ask for whatever is missing among side, entry, leverage (and stop / target / the exchange's
+liquidation price if they have them). Size is optional — the analysis works in percentages. The
+current price is the `price` that `get_technical_indicators` returns.
 
 Map the symbol to Binance naming for the data tools: `BTC` → `BTCUSDT`, `kPEPE` → `1000PEPEUSDT`,
 `xyz:AVGO` → `AVGOUSDT`.
@@ -54,22 +50,21 @@ Map the symbol to Binance naming for the data tools: `BTC` → `BTCUSDT`, `kPEPE
 3. `get_positions` — `symbol`, `status: "open"`, `limit: 20`. Optional; skip on a tight quota.
    Tells you whether tracked top traders are on the same side.
 
-Three positions ≈ 1 + 3 + 1 (+3) calls. If the quota is tight, do the account call plus
-derivatives for all coins, then technicals for the position with the smallest liquidation
-distance first.
+Three positions ≈ 3 + 1 (+3) calls. If the quota is tight, do derivatives for all coins first,
+then technicals for the position with the smallest liquidation distance.
 
 ## The math (show it, briefly)
 
 - P&L % on margin = (mark − entry) / entry × leverage, sign-flipped for shorts; P&L % on price =
   the same without leverage. State both when leverage > 1.
-- Distance to liquidation = |liq − mark| / mark. With no `liquidationPrice`, approximate:
+- Distance to liquidation = |liq − mark| / mark. With no liquidation price from the user, approximate:
   ≈ 100 / leverage % minus a maintenance buffer (say it is approximate; cross margin makes the
   real distance depend on the whole account).
 - Distance to stop = |stop − mark| / mark, and stop distance in ATRs = |stop − mark| / ATR(14) on
   the 4h. Under 1 ATR means the stop sits inside normal noise for that timeframe.
 - Funding per day ≈ `funding.ratePct` × 3 on notional; positive rate costs longs and pays shorts.
 
-Bands for the liquidation distance (the same ones TraderSpy uses on the account view): ≤ 5% →
+Bands for the liquidation distance: ≤ 5% →
 "at risk", ≤ 15% → "watch", above → "comfortable". These are labels for a distance, not
 instructions.
 
@@ -79,7 +74,7 @@ ALWAYS use this template per position:
 
 **<COIN> <SIDE> · <leverage>x · <marginMode>**
 
-- Entry <entry> → mark <mark> (<±x.x%> on price, <±y%> on margin) · uPnL <$>
+- Entry <entry> → mark <mark> (<±x.x%> on price, <±y%> on margin) · uPnL <$, when the size is known>
 - Liquidation <liq> — <d%> away → **<at risk / watch / comfortable>**
 - Stop <stop or "none stated"> — <d%> / <n> ATR(4h) away · Target <if any>
 - Chart: 1h <bias, RSI, trend> · 4h <…> · 1d <…> · confluence <aligned / mixed>
@@ -91,8 +86,7 @@ ALWAYS use this template per position:
 - Scenarios: if price goes to <nearest level against> the position shows <P&L>; at <liquidation>
   it is gone; at <nearest level for> it shows <P&L>
 
-Then one account-level line (account value, withdrawable, total uPnL, the position with the least
-room) and one plain sentence that crypto derivatives are high-risk and this is market information,
+Then one line naming the position with the least room, and one plain sentence that crypto derivatives are high-risk and this is market information,
 not financial advice.
 
 Facts first, labels second, no verbs of instruction. "The stop sits 0.6 ATR away, inside normal 4h
@@ -107,16 +101,16 @@ noise" is a report; "move your stop" is not.
   not predictions of where price will go.
 - Nothing in this connector trades — no order, close, transfer or withdrawal tool exists, by
   design. Say so when asked to act; the decision and any trade stay with the user.
-- Account data is the user's own and stays in the conversation; do not restate balances the user
-  did not ask about in later unrelated answers.
-- Quote only tool results; if `liquidationPrice` is null or a coin is not tracked, say so.
+- Position details the user shares stay in the conversation; do not restate them in later
+  unrelated answers.
+- Quote only tool results and what the user told you; if a coin is not tracked, say so.
 
 Formulas and worked examples: `references/risk-math.md`.
 
 ## Examples
 
 ```text
-Show my account. For each open position, how far is liquidation, and what do the 1h/4h/1d indicators say about it?
+I'm short SOL from 180 at 5x, liquidation around 214. How far is it, and what do the 1h/4h/1d indicators say?
 I'm long ETH from 2,400 at 10x with a stop at 2,250. How does it look?
 Am I in trouble on my SOL short?
 ```
@@ -127,7 +121,7 @@ Am I in trouble on my SOL short?
 - Tool calls are metered per day: 300 on the free tier, 5,000 on premium.
 - Every tool is read-only. Nothing here places, closes or modifies an order, and there is no withdrawal or transfer tool.
 - The output is market data and analysis for the user's own research, not investment advice.
-- Reading the user's own positions (`get_my_account`) needs their personal connection (their key or OAuth) and covers only their own TraderSpy account. Positions held anywhere else have to be described in chat.
+- TraderSpy cannot see anyone's exchange or TraderSpy account, so every position has to be described or pasted in chat.
 - Without a `liquidationPrice` the liquidation distance is an approximation; under cross margin it depends on the whole account.
 
 ## Related Skills

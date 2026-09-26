@@ -3,7 +3,7 @@ name: traderspy-market-screener
 description: "Scan the most-traded crypto futures pairs for up to 3 technical conditions in one TraderSpy call, compare coins, and backtest what followed a condition. Use for \"which coins are oversold\"."
 category: finance
 risk: safe
-source: "https://github.com/target1m/traderspy-mcp/tree/a3060be0ea0096bc47096fc82714bbfc7ab80805/skills/market-screener"
+source: "https://github.com/target1m/traderspy-mcp/tree/069aae5a84640d671f92705a2e3bc0b62efca1e0/skills/market-screener"
 source_repo: target1m/traderspy-mcp
 source_type: official
 date_added: "2026-09-25"
@@ -11,7 +11,7 @@ author: target1m
 tags: [traderspy, crypto, screener, backtesting, mcp]
 tools: [claude, cursor, gemini]
 license: MIT
-license_source: "https://github.com/target1m/traderspy-mcp/blob/a3060be0ea0096bc47096fc82714bbfc7ab80805/LICENSE"
+license_source: "https://github.com/target1m/traderspy-mcp/blob/069aae5a84640d671f92705a2e3bc0b62efca1e0/LICENSE"
 ---
 
 # TraderSpy Market Screener
